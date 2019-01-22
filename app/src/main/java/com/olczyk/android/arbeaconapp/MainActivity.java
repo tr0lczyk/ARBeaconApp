@@ -1,17 +1,12 @@
 package com.olczyk.android.arbeaconapp;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -21,20 +16,17 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
 public class MainActivity extends AppCompatActivity {
+
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final double MIN_OPENGL_VERSION = 3.0;
 
-    ArFragment arFragment;
+    CustomArFragment arFragment;
     ModelRenderable lampPostRenderable;
     BeaconController beaconController;
     boolean isBeaconNear = false;
-    private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
-    private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
 
     @Override
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
@@ -44,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         setContentView(R.layout.activity_main);
-        arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.arFragment);
+        arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(R.id.arFragment);
         ModelRenderable.builder()
                 .setSource(this, Uri.parse("Beer.sfb"))
                 .build()
@@ -56,10 +48,9 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                     return null;
                 });
-        getLocationPermission();
         arFragment.setOnTapArPlaneListener(
                 (HitResult hitresult, Plane plane, MotionEvent motionevent) -> {
-                    if(isBeaconNear != false){
+                    if(isBeaconNear == false){
                         if (lampPostRenderable == null){
                             return;
                         }
@@ -93,8 +84,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
         beaconController.BeaconRangeObserve(new BeaconController.onBeaconInDistanceListener() {
             @Override
             public void onBeaconInDistance(double distance) {
@@ -121,55 +110,5 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    private void getLocationPermission() {
-        Log.d("LOG", "getLocationPermission: getting location permissions");
-        String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION};
-
-        if (ContextCompat.checkSelfPermission(MainActivity.this.getApplicationContext(),
-                FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(MainActivity.this.getApplicationContext(),
-                    COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            } else {
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        permissions,
-                        LOCATION_PERMISSION_REQUEST_CODE);
-            }
-        } else {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    permissions,
-                    LOCATION_PERMISSION_REQUEST_CODE);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
-        Log.i("LOG", "onRequestPermissionsResult: called.");
-        switch (requestCode) {
-            case LOCATION_PERMISSION_REQUEST_CODE: {
-                if (grantResults.length > 0) {
-                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                        Log.i("LOG", "permission failed");
-                    } else {
-                        Log.d("LOG", "permission success");
-                        this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                                        Manifest.permission.ACCESS_FINE_LOCATION)
-                                        != PackageManager.PERMISSION_GRANTED &&
-                                        ActivityCompat.checkSelfPermission(MainActivity.this,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION)
-                                                != PackageManager.PERMISSION_GRANTED) {
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        }
     }
 }
