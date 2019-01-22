@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         setContentView(R.layout.activity_main);
-        arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(R.id.arFragment);
+        arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(R.id.customArFragment);
         ModelRenderable.builder()
                 .setSource(this, Uri.parse("Beer.sfb"))
                 .build()
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 });
         arFragment.setOnTapArPlaneListener(
                 (HitResult hitresult, Plane plane, MotionEvent motionevent) -> {
-                    if(isBeaconNear == false){
+                    if(isBeaconNear == true){
                         if (lampPostRenderable == null){
                             return;
                         }
