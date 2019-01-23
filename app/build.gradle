@@ -34,8 +34,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
-
-sceneform.asset('sampledata/Beer.obj',
+sceneform.asset('sampledata/Bike.obj',
         'default',
-        'sampledata/Beer.sfa',
-        'src/main/assets/Beer')
+        'sampledata/Bike.sfa',
+        'src/main/assets/Bike')

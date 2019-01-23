@@ -1,10 +1,10 @@
 {
   materials: [
     {
-      name: 'Beer_Mat',
+      name: 'lambert4SG',
       parameters: [
         {
-          baseColor: 'Beer_BaseColor',
+          baseColor: 'Bike Texture',
         },
         {
           baseColorTint: [
@@ -34,15 +34,16 @@
       'Orientation',
     ],
     collision: {},
-    file: 'sampledata/Beer.obj',
-    name: 'Beer',
+    file: 'sampledata/Bike.obj',
+    name: 'Bike',
     recenter: 'root',
+    scale: 0.001,
   },
   samplers: [
     {
-      file: 'sampledata\\Beer_BaseColor.png',
-      name: 'Beer_BaseColor',
-      pipeline_name: 'Beer_BaseColor.png',
+      file: 'sampledata\\Bike Texture.png',
+      name: 'Bike Texture',
+      pipeline_name: 'Bike Texture.png',
     },
   ],
   version: '0.54:1',

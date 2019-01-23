@@ -2,7 +2,10 @@ package com.olczyk.android.arbeaconapp;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     CustomArFragment arFragment;
     ModelRenderable lampPostRenderable;
     BeaconController beaconController;
+    BluetoothAdapter bluetoothAdapter;
     boolean isBeaconNear = false;
 
     @Override
@@ -35,10 +39,11 @@ public class MainActivity extends AppCompatActivity {
         if (!checkIsSupportedDeviceOrFinish(this)) {
             return;
         }
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         setContentView(R.layout.activity_main);
         arFragment = (CustomArFragment) getSupportFragmentManager().findFragmentById(R.id.customArFragment);
         ModelRenderable.builder()
-                .setSource(this, Uri.parse("Beer.sfb"))
+                .setSource(this, Uri.parse("Bike.sfb"))
                 .build()
                 .thenAccept(renderable -> lampPostRenderable = renderable)
                 .exceptionally(throwable -> {
@@ -50,8 +55,9 @@ public class MainActivity extends AppCompatActivity {
                 });
         arFragment.setOnTapArPlaneListener(
                 (HitResult hitresult, Plane plane, MotionEvent motionevent) -> {
-                    if(isBeaconNear == true){
-                        if (lampPostRenderable == null){
+                    isBluetoothEnabled();
+                    if (isBeaconNear == true) {
+                        if (lampPostRenderable == null) {
                             return;
                         }
                         Anchor anchor = hitresult.createAnchor();
@@ -62,35 +68,17 @@ public class MainActivity extends AppCompatActivity {
                         lamp.setRenderable(lampPostRenderable);
                         lamp.select();
                     } else {
-                        Toast.makeText(this, "NO BEACON FOUND", Toast.LENGTH_SHORT).show();
+                        if(!bluetoothAdapter.isEnabled()){
+                            Toast.makeText(this, "BLUETOOTH NOT AVAILABLE", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "NO BEACON FOUND", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
         );
-
-        beaconController = new BeaconController(this);
-
-        beaconController.setDistanceTrigger(0.01);
-        beaconController.BeaconDiscoveryObserve(new BeaconController.onBeaconDiscoveredListener() {
-            @Override
-            public void onBeaconDiscovered() {
-                Toast.makeText(MainActivity.this, "DISCOVERED", Toast.LENGTH_SHORT).show();
-                isBeaconNear = true;
-            }
-
-            @Override
-            public void onBeaconExit() {
-                Toast.makeText(MainActivity.this, "NO BEACON", Toast.LENGTH_SHORT).show();
-                isBeaconNear = false;
-            }
-        });
-
-        beaconController.BeaconRangeObserve(new BeaconController.onBeaconInDistanceListener() {
-            @Override
-            public void onBeaconInDistance(double distance) {
-                Log.d("TEST","distance" + distance);
-            }
-        });
+        scanningForBeacon();
     }
+
     public static boolean checkIsSupportedDeviceOrFinish(final Activity activity) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             Log.e(TAG, "Sceneform requires Android N or later");
@@ -110,5 +98,69 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    public boolean isBluetoothEnabled() {
+        if (!bluetoothAdapter.isEnabled()) {
+            alertDialogBuilder();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public void alertDialogBuilder() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Bluetooth")
+                .setMessage("Turn on bluetooth to find beacon")
+                .setPositiveButton("Turn on", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        enableBluetooth();
+                        dialog.dismiss();
+                        Toast.makeText(MainActivity.this, "WAIT FOR THE BEACON", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        isBeaconNear = false;
+                        dialog.dismiss();
+                    }
+                })
+                .create()
+                .show();
+    }
+
+    public void enableBluetooth() {
+        if (!bluetoothAdapter.isEnabled()) {
+            bluetoothAdapter.enable();
+            scanningForBeacon();
+        }
+    }
+
+    public void scanningForBeacon(){
+        beaconController = new BeaconController(this);
+        beaconController.setDistanceTrigger(0.01);
+        beaconController.BeaconDiscoveryObserve(new BeaconController.onBeaconDiscoveredListener() {
+            @Override
+            public void onBeaconDiscovered() {
+                Toast.makeText(MainActivity.this, "BEACON DISCOVERED", Toast.LENGTH_SHORT).show();
+                isBeaconNear = true;
+            }
+
+            @Override
+            public void onBeaconExit() {
+                Toast.makeText(MainActivity.this, "NO BEACON", Toast.LENGTH_SHORT).show();
+                isBeaconNear = false;
+            }
+        });
+
+        beaconController.BeaconRangeObserve(new BeaconController.onBeaconInDistanceListener() {
+            @Override
+            public void onBeaconInDistance(double distance) {
+                Log.d("TEST", "distance" + distance);
+            }
+        });
     }
 }
